@@ -10,6 +10,7 @@ module TagCoherence =
         [|
             [|"RNASeq"; "mRNASeq"; "DNASeq"|]
             [|"MIAPE"; "MIAPPE"|]
+            [|"Phenomics"; "Genomics"|]
         |]
 
     let WhiteListMap =
