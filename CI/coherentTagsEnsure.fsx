@@ -15,6 +15,7 @@ let WhiteList : string [] [] =
   [| 
     [|"RNASeq"; "mRNASeq"; "DNASeq"|]
     [| "MIAPPE"; "MIAPE" |]
+    [| "Phenomics"; "Genomics" |]
   |]
 
 module SorensenDice =
