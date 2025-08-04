@@ -1,8 +1,8 @@
-﻿@page "/templates"
+@page "/templates"
 @inject IDbContextFactory<SwateTemplateDb> SwateTemplateDbContextFactory
 @rendermode InteractiveServer
 
-<h1>All available Swate templates</h1
+<h1>All available Swate templates</h1>
 
 @if (TemplateSummaries == null)
 {
@@ -11,6 +11,13 @@
 else
 {
     <input @bind="searchTerm" @bind:event="oninput" placeholder="Search by name" />
+    <select @bind="selectedOrganisation" class="form-control mb-2">
+        <option value="">-- All Organisations</option>
+        @foreach (var org in DistinctOrganizations)
+        {
+            <option value="@org">@org</option>
+        }
+    </select>
 
     <div class="overflow-auto">
         <table class="table">
@@ -35,8 +42,9 @@ else
     </div>
 }
 
-@code 
+@code
 {
+
     ///  <summary>
     /// This is the collection of all templates from the database.
     /// </summary>
@@ -45,12 +53,31 @@ else
     /// search string in input field
     /// </summary>
     private string searchTerm = string.Empty;
+    private string selectedOrganisation = string.Empty;
 
-    private TemplateSummary[] FilteredTemplates => string.IsNullOrWhiteSpace(searchTerm)
+    private TemplateSummary[] FilteredTemplatesByName => string.IsNullOrWhiteSpace(searchTerm)
         ? TemplateSummaries
         : TemplateSummaries?.Where(r => r.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
         .ToArray();
 
+    private string[] DistinctOrganizations => TemplateSummaries
+        .Select(t => t.Organisation)
+        .Where(org => !string.IsNullOrWhiteSpace(org))
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .OrderBy(org => org)
+        .ToArray();
+
+    private TemplateSummary[] FilteredTemplates =>
+        FilteredTemplatesByName
+            .Where(t => string.IsNullOrWhiteSpace(selectedOrganisation)
+                        ||  t.Organisation?.Equals(selectedOrganisation, StringComparison.OrdinalIgnoreCase) == true)
+        .ToArray();
+
+    private TemplateSummary[] FilteredTemplatesByOrganisation => string.IsNullOrWhiteSpace(selectedOrganisation)
+        ? TemplateSummaries
+        : TemplateSummaries?.Where(t =>
+            t.Organisation?.Equals(selectedOrganisation, StringComparison.OrdinalIgnoreCase) == true)
+        .ToArray();
 
     protected override async Task OnInitializedAsync()
     {
@@ -92,7 +119,8 @@ else
                             Tags = (latestTemplate?.Tags ?? []).Select(t => t.Name).ToArray(),
                             ReleaseDate = latestTemplate.ReleaseDate,
                             LatestVersion = latestTemplate.GetSemanticVersionString(),
-                            TotalDownloads = downloads
+                            TotalDownloads = downloads,
+                            Organisation = latestTemplate.Organisation
                         };
                     }
                 )
