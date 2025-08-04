@@ -2,11 +2,11 @@
 
 ---
 
-# 👩‍🔬👨‍🔬 How to add and update templates
+## 👩‍🔬👨‍🔬 How to add and update templates
 
-## 🧩 Workflow Overview
+### 🧩 Workflow Overview
 
-### 📄 Creating a New Template
+#### 📄 Creating a New Template
 
 1. **Check for existing templates** — make sure you're not duplicating.
 2. **Create a template** using [Swate](https://github.com/nfdi4plants/Swate) or [ARCtrl](https://github.com/nfdi4plants/ARCtrl), following the [official guide](https://nfdi4plants.github.io/nfdi4plants.knowledgebase/swate/swate-template-contribution/).
@@ -36,9 +36,9 @@
 
 ---
 
-# 💻 How to contribute to the Swate-Template-Registry-Service (STR-service)
+## 💻 How to contribute to the Swate-Template-Registry-Service (STR-service)
 
-## 📚 Requirements
+### 📚 Requirements
 
 For adding or updating templates, installation is not required. The following tools need to be installed to work on the STR service.
 
@@ -58,7 +58,7 @@ docker --version
 
 ---
 
-### 🛠️ Updating the STR Service
+#### 🛠️ Updating the STR Service
 
 1. Implement your feature or bug fix.
 2. Regenerate `STRClient.cs` using this [guide](.github/CONTRIBUTING.md#3-strclient-generation).
