@@ -1,4 +1,4 @@
-@page "/templates"
+﻿@page "/templates"
 @inject IDbContextFactory<SwateTemplateDb> SwateTemplateDbContextFactory
 @rendermode InteractiveServer
 
@@ -53,7 +53,7 @@ else
     /// search string in input field
     /// </summary>
     private string searchTerm = string.Empty;
-    private string selectedOrganisation = string.Empty;
+    private string selectedOrganisation = "DataPLANT";
 
     private TemplateSummary[] FilteredTemplatesByName => string.IsNullOrWhiteSpace(searchTerm)
         ? TemplateSummaries
