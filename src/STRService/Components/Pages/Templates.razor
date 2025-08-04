@@ -1,4 +1,4 @@
-﻿@page "/templates"
+@page "/templates"
 @inject IDbContextFactory<SwateTemplateDb> SwateTemplateDbContextFactory
 @rendermode InteractiveServer
 
@@ -11,13 +11,25 @@
 else
 {
     <input @bind="searchTerm" @bind:event="oninput" placeholder="Search by name" />
-    <select @bind="selectedOrganisation" class="form-control mb-2">
-        <option value="">-- All Organisations</option>
-        @foreach (var org in DistinctOrganizations)
+    <div class="dropdown" @onclick:stopPropagation>
+        <button style="font-size: 0.875rem; padding: 0.25rem 0.5rem" @onclick="ToggleDropDown">
+            Communities
+        </button>
+        @if (IsDropdownOpen)
         {
-            <option value="@org">@org</option>
+            <div class="dropdown-menu show p-3 border bg-white shadow rounded mt-1" style="min-width: 250px;">
+                <button class="secondary" style="margin-top: 0.5rem; font-size: 0.875rem; padding: 0.25rem 0.5rem" @onclick="ClearCommunities">All Communities</button>
+                @foreach (var org in DistinctOrganisations)
+                {
+                    <div>
+                        <input type="checkbox" id="@org" @onchange="() => ToggleOrganisation(org)"
+                            checked="@SelectedOrganisations.Contains(org)" />
+                        <label for="@org">@org</label>
+                    </div>
+                }
+            </div>
         }
-    </select>
+    </div>
 
     <div class="overflow-auto">
         <table class="table">
@@ -44,7 +56,6 @@ else
 
 @code
 {
-
     ///  <summary>
     /// This is the collection of all templates from the database.
     /// </summary>
@@ -54,13 +65,27 @@ else
     /// </summary>
     private string searchTerm = string.Empty;
     private string selectedOrganisation = "DataPLANT";
+    private HashSet<string> SelectedOrganisations = new();
+
+    private bool IsDropdownOpen = false;
+
+    private void ToggleDropDown()
+    {
+        IsDropdownOpen = !IsDropdownOpen;
+    }
+
+    [JSInvokable]
+    public void CloseDropDown()
+    {
+        IsDropdownOpen = false;
+    }
 
     private TemplateSummary[] FilteredTemplatesByName => string.IsNullOrWhiteSpace(searchTerm)
         ? TemplateSummaries
         : TemplateSummaries?.Where(r => r.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
         .ToArray();
 
-    private string[] DistinctOrganizations => TemplateSummaries
+    private string[] DistinctOrganisations => TemplateSummaries
         .Select(t => t.Organisation)
         .Where(org => !string.IsNullOrWhiteSpace(org))
         .Distinct(StringComparer.OrdinalIgnoreCase)
@@ -69,15 +94,26 @@ else
 
     private TemplateSummary[] FilteredTemplates =>
         FilteredTemplatesByName
-            .Where(t => string.IsNullOrWhiteSpace(selectedOrganisation)
-                        ||  t.Organisation?.Equals(selectedOrganisation, StringComparison.OrdinalIgnoreCase) == true)
+            .Where(t => SelectedOrganisations.Count == 0
+                        || t.Organisation != null && SelectedOrganisations.Contains(t.Organisation))
         .ToArray();
 
-    private TemplateSummary[] FilteredTemplatesByOrganisation => string.IsNullOrWhiteSpace(selectedOrganisation)
-        ? TemplateSummaries
-        : TemplateSummaries?.Where(t =>
-            t.Organisation?.Equals(selectedOrganisation, StringComparison.OrdinalIgnoreCase) == true)
-        .ToArray();
+    private void ToggleOrganisation(string org)
+    {
+        if (SelectedOrganisations.Contains(org))
+        {
+            SelectedOrganisations.Remove(org);
+        }
+        else
+        {
+            SelectedOrganisations.Add(org);
+        }
+    }
+
+    private void ClearCommunities()
+    {
+        SelectedOrganisations.Clear();
+    }
 
     protected override async Task OnInitializedAsync()
     {
