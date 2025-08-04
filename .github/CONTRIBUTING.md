@@ -2,25 +2,7 @@
 
 ---
 
-## 📚 Requirements
-
-The following tools need to be installed to work on the STR service. For adding or updating templates, installation is not required. 
-
-| Tool                | Tested Version | Notes                                                              |
-| ------------------- | -------------- | ------------------------------------------------------------------ |
-| `NSwag.ConsoleCore` | 14.4.0         | Install with: `dotnet tool restore` as local dotnet tool           |
-| `.NET SDK`          | 9.0.300        | [Download .NET SDK](https://dotnet.microsoft.com/en-us/download)   |
-| Docker Desktop      | 4.40.0         | [Download Docker](https://www.docker.com/products/docker-desktop/) |
-
-Verify installations with:
-
-```bash
-dotnet nswag version
-dotnet --version
-docker --version
-```
-
----
+# 👩‍🔬👨‍🔬 How to add and update templates
 
 ## 🧩 Workflow Overview
 
@@ -54,6 +36,28 @@ docker --version
 
 ---
 
+# 💻 How to contribute to the Swate-Template-Registry-Service (STR-service)
+
+## 📚 Requirements
+
+For adding or updating templates, installation is not required. The following tools need to be installed to work on the STR service.
+
+| Tool                | Tested Version | Notes                                                              |
+| ------------------- | -------------- | ------------------------------------------------------------------ |
+| `NSwag.ConsoleCore` | 14.4.0         | Install with: `dotnet tool restore` as local dotnet tool           |
+| `.NET SDK`          | 9.0.300        | [Download .NET SDK](https://dotnet.microsoft.com/en-us/download)   |
+| Docker Desktop      | 4.40.0         | [Download Docker](https://www.docker.com/products/docker-desktop/) |
+
+Verify installations with:
+
+```bash
+dotnet nswag version
+dotnet --version
+docker --version
+```
+
+---
+
 ### 🛠️ Updating the STR Service
 
 1. Implement your feature or bug fix.
@@ -74,7 +78,5 @@ When you create a PR to `main`, the following checks will run automatically:
   * Unambiguous.
   * Non-redundant.
 * ✅ Versioning in filenames must be correct.
-* ✅ All templates in the database must exist locally.
 
 **Note**: If tests fail, either fix the issue or wait for curators to respond.
-
