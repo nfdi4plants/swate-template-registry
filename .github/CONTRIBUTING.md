@@ -6,6 +6,8 @@
 
 ### 🧩 Workflow Overview
 
+--
+
 #### 📄 Creating a New Template
 
 1. **Check for existing templates** — make sure you're not duplicating.
