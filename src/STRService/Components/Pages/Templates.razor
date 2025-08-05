@@ -1,3 +1,5 @@
+@using STRService.Extensions;
+
 @page "/templates"
 @inject IDbContextFactory<SwateTemplateDb> SwateTemplateDbContextFactory
 @rendermode InteractiveServer
@@ -40,10 +42,14 @@ else
         <table class="table">
             <thead>
                 <tr>
-                    <th scope="col">Name</th>
+                    <th scope="col" @onclick="() => SortByName()" style="cursor: pointer;">
+                        Name @GetSortIcon("Name")
+                    </th>
                     <th scope="col">Description</th>
                     <th scope="col">Latest stable version</th>
-                    <th scope="col">Release date</th>
+                    <th scope="col" @onclick="() => SortByReleaseDate()" style="cursor: pointer;">
+                        Release date @GetSortIcon("ReleaseDate")
+                    </th>
                     <th scope="col">Tags</th>
                     <th scope="col">Total Downloads</th>
                     <th scope="col">Id</th>
@@ -69,22 +75,53 @@ else
     /// search string in input field
     /// </summary>
     private string searchTerm = string.Empty;
+    private string sortColumn = "Name";
+
     private HashSet<string> SelectedOrganisations = new() { "DataPLANT" };
 
+    private bool sortAscending = true;
+    private bool isDropdownOpen = false;
     private bool areAllCommunitiesSelected => SelectedOrganisations.Count == 0;
 
-    private bool IsDropdownOpen = false;
+    private void SortByName()
+    {
+        SortByColumn("Name");
+    }
+
+    private void SortByReleaseDate()
+    {
+        SortByColumn("ReleaseDate");
+    }
+
+    private void SortByColumn(string column)
+    {
+        if (sortColumn == column)
+        {
+            sortAscending = !sortAscending;
+        }
+        else
+        {
+            sortColumn = column;
+            sortAscending = true;
+        }
+    }
+
+    private string GetSortIcon(string column)
+    {
+        if (sortColumn != column) return "▲▼";
+        return sortAscending ? "▲" : "▼";
+    }
 
     private void ToggleDropDown()
     {
-        IsDropdownOpen = !IsDropdownOpen;
+        isDropdownOpen = !isDropdownOpen;
     }
 
     private void ToggleAllOrganisations()
     {
         ToggleOrganisation("All Communities");
     }
-
+    
     private TemplateSummary[] FilteredTemplatesByName => string.IsNullOrWhiteSpace(searchTerm)
         ? TemplateSummaries
         : TemplateSummaries?.Where(r => r.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
@@ -101,7 +138,8 @@ else
         FilteredTemplatesByName
             .Where(t => SelectedOrganisations.Count == 0
                         || t.Organisation != null && SelectedOrganisations.Contains(t.Organisation))
-        .ToArray();
+        .ToArray()
+        .SortTemplatesBy(sortColumn, sortAscending);
 
     private void ToggleOrganisation(string org)
     {
