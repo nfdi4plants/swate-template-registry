@@ -18,8 +18,8 @@ else
         <ul>
             <li>
                 <label>
-                    <input type="checkbox" id="All Communities" @onchange="ToggleAllOrganisations"
-                           checked="@areAllCommunitiesSelected" />
+                    <input type="checkbox" id="All Communities" @onchange="() => ToggleAllOrganisations()"
+                           checked="@HasAllOrganisations()" />
                     All Communities
                 </label>
             </li>
@@ -71,8 +71,6 @@ else
     private string searchTerm = string.Empty;
     private HashSet<string> SelectedOrganisations = new() { "DataPLANT" };
 
-    private bool areAllCommunitiesSelected => SelectedOrganisations.Count == 0;
-
     private bool IsDropdownOpen = false;
 
     private void ToggleDropDown()
@@ -80,9 +78,23 @@ else
         IsDropdownOpen = !IsDropdownOpen;
     }
 
+    private bool HasAllOrganisations()
+    {
+        return SelectedOrganisations.Contains("All Communities");
+    }
+
     private void ToggleAllOrganisations()
     {
-        ToggleOrganisation("All Communities");
+        if (HasAllOrganisations())
+        {
+            SelectedOrganisations.Clear();
+        }
+        else
+        {
+            SelectedOrganisations = DistinctOrganisations.ToHashSet();
+            SelectedOrganisations.Add("All Communities");
+            SelectedOrganisations.Distinct();
+        }
     }
 
     private TemplateSummary[] FilteredTemplatesByName => string.IsNullOrWhiteSpace(searchTerm)
@@ -108,10 +120,7 @@ else
         if (SelectedOrganisations.Contains(org))
         {
             SelectedOrganisations.Remove(org);
-        }
-        else if (org == "All Communities")
-        {
-            SelectedOrganisations.Clear();
+            SelectedOrganisations.Remove("All Communities");
         }
         else
         {
