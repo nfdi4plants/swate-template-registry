@@ -22,7 +22,7 @@
 
 ---
 
-### ✏️ Updating an Existing Template
+#### ✏️ Updating an Existing Template
 
 1. **Duplicate** the existing template.
 2. **Place the copy** in the same folder as the original.
@@ -33,6 +33,22 @@
 6. **Commit & PR**: Submit your changes via a pull request to `main`.
 
    * This will trigger a CI workflow that validates your template for best practices.
+
+---
+
+#### ✅ Pull Request Validation
+
+When you create a PR to `main`, the following checks will run automatically:
+
+* ✅ Templates must be parsable.
+* ✅ Tags must be:
+
+  * Distinct between endpoint and general use.
+  * Unambiguous.
+  * Non-redundant.
+* ✅ Versioning in filenames must be correct.
+
+**Note**: If tests fail, either fix the issue or wait for curators to respond.
 
 ---
 
@@ -58,7 +74,7 @@ docker --version
 
 ---
 
-#### 🛠️ Updating the STR Service
+### 🛠️ Updating the STR Service
 
 1. Implement your feature or bug fix.
 2. Regenerate `STRClient.cs` using this [guide](.github/CONTRIBUTING.md#3-strclient-generation).
@@ -66,17 +82,3 @@ docker --version
 4. Commit your changes and create a PR to `main`.
 
 ---
-
-### ✅ Pull Request Validation
-
-When you create a PR to `main`, the following checks will run automatically:
-
-* ✅ Templates must be parsable.
-* ✅ Tags must be:
-
-  * Distinct between endpoint and general use.
-  * Unambiguous.
-  * Non-redundant.
-* ✅ Versioning in filenames must be correct.
-
-**Note**: If tests fail, either fix the issue or wait for curators to respond.
