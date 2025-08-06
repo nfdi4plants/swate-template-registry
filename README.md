@@ -1,16 +1,25 @@
-# Swate Templates
+# 🌱 Swate Template Registry
 
-A collection of minimal information standard templates for [Swate](https://github.com/nfdi4plants/Swate).
+The **Swate Template Registry** is a tool for managing templates used in Swate. It allows you to:
 
-The templates in this repository are crawled by [Swobup](https://github.com/nfdi4plants/Swobup) and written into the production Swate database.
+* ✅ Add new templates
+* 🔁 Update existing templates
+* 👀 View templates via a web service
 
-Anyone can access them via the [template search](https://nfdi4plants.github.io/nfdi4plants.knowledgebase/swate/templates/) function.
+🔗 Access the Template Registry Service: [str.nfdi4plants.org](https://str.nfdi4plants.org/)
 
-:rocket: In addition, the templates are now automatically converted via a github-action upon every push into a [templates.json](https://github.com/nfdi4plants/Swate-templates/releases/download/latest/templates.json) file, which contains **all** templates.
-For details check "releases" on the right.
+🔗 OpenAPI/Swagger docs: [str.nfdi4plants.org/swagger](https://str.nfdi4plants.org/swagger/index.html)
 
 ---
 
-# Contribution Guide
+## 🧭 Project Overview
 
-You can find the contribution guide in the [Knowledge Base](https://nfdi4plants.github.io/nfdi4plants.knowledgebase/swate/swate-template-contribution/).
+* 🔍 [Source code and structure](src)
+* 🗺️ [Graph of the CI workflow](src/STRCI)
+
+---
+
+## 🤝 Contributing
+
+For contributing Swate templates, please check out the [contribution guide](https://nfdi4plants.github.io/nfdi4plants.knowledgebase/swate/swate-template-contribution/) in the DataPLANT knowledgebase.
+For contributing to the STR service, check out this [contribution guide](.github/CONTRIBUTING.md).

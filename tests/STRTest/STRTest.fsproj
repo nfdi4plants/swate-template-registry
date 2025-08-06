@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Helper/Constants.fs" />
+    <Compile Include="Helper/Util.fs" />
+    <Compile Include="Helper/TemplatesRead.fs" />
+    <Compile Include="Helper/TestData.fs" />
+    <Compile Include="TemplateAvailability.fs" />
+    <Compile Include="FileNameVersionTest.fs" />
+    <Compile Include="TemplatesParse.Test.fs" />
+    <Compile Include="TagCategory.Test.fs" />
+    <Compile Include="TagSimilarity.Test.fs" />
+    <Compile Include="TagAmbiguity.Test.fs" />
+    <Compile Include="Main.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ARCtrl" Version="2.0.0-beta.2" />
+    <PackageReference Include="Expecto" Version="10.2.3" />
+    <PackageReference Include="FsSpreadsheet" Version="6.3.1" />
+    <PackageReference Include="FsSpreadsheet.Net" Version="6.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\STRCI\STRCI.fsproj" />
+  </ItemGroup>
+
+</Project>
