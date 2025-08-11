@@ -111,8 +111,7 @@ else
 
     private TemplateSummary[] FilteredTemplates =>
         FilteredTemplatesByName
-            .Where(t => SelectedOrganisations.Count == 0
-                        || t.Organisation != null && SelectedOrganisations.Contains(t.Organisation))
+            .Where(t => t.Organisation != null && SelectedOrganisations.Contains(t.Organisation))
         .ToArray();
 
     private void ToggleOrganisation(string org)
