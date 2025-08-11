@@ -13,15 +13,13 @@
 else
 {
     <input @bind="searchTerm" @bind:event="oninput" placeholder="Search by name" />
-    <details class="dropdown">
-        <summary>
-            Communities
-        </summary>
+    <details class="dropdown" style="cursor: pointer;" readonly value="@string.Join(" , ", SelectedOrganisations)">
+        <summary>Communities</summary>
         <ul>
             <li>
                 <label>
-                    <input type="checkbox" id="All Communities" @onchange="ToggleAllOrganisations"
-                           checked="@areAllCommunitiesSelected" />
+                    <input type="checkbox" id="All Communities" @onchange="() => ToggleAllOrganisations()"
+                           checked="@HasAllOrganisations()" />
                     All Communities
                 </label>
             </li>
@@ -111,15 +109,30 @@ else
         if (sortColumn != column) return "▲▼";
         return sortAscending ? "▲" : "▼";
     }
+    private bool IsDropdownOpen = false;
 
     private void ToggleDropDown()
     {
         isDropdownOpen = !isDropdownOpen;
     }
 
+    private bool HasAllOrganisations()
+    {
+        return SelectedOrganisations.Contains("All Communities");
+    }
+
     private void ToggleAllOrganisations()
     {
-        ToggleOrganisation("All Communities");
+        if (HasAllOrganisations())
+        {
+            SelectedOrganisations.Clear();
+        }
+        else
+        {
+            SelectedOrganisations = DistinctOrganisations.ToHashSet();
+            SelectedOrganisations.Add("All Communities");
+            SelectedOrganisations.Distinct();
+        }
     }
     
     private TemplateSummary[] FilteredTemplatesByName => string.IsNullOrWhiteSpace(searchTerm)
@@ -136,8 +149,7 @@ else
 
     private TemplateSummary[] FilteredTemplates =>
         FilteredTemplatesByName
-            .Where(t => SelectedOrganisations.Count == 0
-                        || t.Organisation != null && SelectedOrganisations.Contains(t.Organisation))
+            .Where(t => t.Organisation != null && SelectedOrganisations.Contains(t.Organisation))
         .ToArray()
         .SortTemplatesBy(sortColumn, sortAscending);
 
@@ -146,10 +158,7 @@ else
         if (SelectedOrganisations.Contains(org))
         {
             SelectedOrganisations.Remove(org);
-        }
-        else if (org == "All Communities")
-        {
-            SelectedOrganisations.Clear();
+            SelectedOrganisations.Remove("All Communities");
         }
         else
         {
