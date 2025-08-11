@@ -11,9 +11,15 @@
 else
 {
     <input @bind="searchTerm" @bind:event="oninput" placeholder="Search by name" />
-    <details class="dropdown">
-        <summary>
+    <details class="dropdown" style="cursor: pointer;" readonly value="@string.Join(" , ", SelectedOrganisations)">
+        <summary style="display: flex; align-items: center; gap: 4px; white-space: normal">
             Communities
+            @if (SelectedOrganisations.Count > 0)
+            {
+                <span style="color: grey;">
+                    (@string.Join(", ", SelectedOrganisations))
+                </span>
+            }
         </summary>
         <ul>
             <li>
