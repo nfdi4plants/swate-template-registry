@@ -1,8 +1,8 @@
-﻿@page "/templates"
+@page "/templates"
 @inject IDbContextFactory<SwateTemplateDb> SwateTemplateDbContextFactory
 @rendermode InteractiveServer
 
-<h1>All available Swate templates</h1
+<h1>All available Swate templates</h1>
 
 @if (TemplateSummaries == null)
 {
@@ -11,6 +11,28 @@
 else
 {
     <input @bind="searchTerm" @bind:event="oninput" placeholder="Search by name" />
+    <details class="dropdown" style="cursor: pointer;" readonly value="@string.Join(" , ", SelectedOrganisations)">
+        <summary>Communities</summary>
+        <ul>
+            <li>
+                <label>
+                    <input type="checkbox" id="All Communities" @onchange="() => ToggleAllOrganisations()"
+                           checked="@HasAllOrganisations()" />
+                    All Communities
+                </label>
+            </li>
+            @foreach (var org in DistinctOrganisations)
+            {
+                <li>
+                    <label>
+                        <input type="checkbox" id="@org" @onchange="() => ToggleOrganisation(org)"
+                               checked="@SelectedOrganisations.Contains(org)"/>
+                        @org
+                    </label>
+                </li>
+            }
+        </ul>
+    </details>
 
     <div class="overflow-auto">
         <table class="table">
@@ -35,7 +57,7 @@ else
     </div>
 }
 
-@code 
+@code
 {
     ///  <summary>
     /// This is the collection of all templates from the database.
@@ -45,12 +67,68 @@ else
     /// search string in input field
     /// </summary>
     private string searchTerm = string.Empty;
+    private HashSet<string> SelectedOrganisations = new() { "DataPLANT" };
 
-    private TemplateSummary[] FilteredTemplates => string.IsNullOrWhiteSpace(searchTerm)
+    private bool IsDropdownOpen = false;
+
+    private void ToggleDropDown()
+    {
+        IsDropdownOpen = !IsDropdownOpen;
+    }
+
+    private bool HasAllOrganisations()
+    {
+        return SelectedOrganisations.Contains("All Communities");
+    }
+
+    private void ToggleAllOrganisations()
+    {
+        if (HasAllOrganisations())
+        {
+            SelectedOrganisations.Clear();
+        }
+        else
+        {
+            SelectedOrganisations = DistinctOrganisations.ToHashSet();
+            SelectedOrganisations.Add("All Communities");
+            SelectedOrganisations.Distinct();
+        }
+    }
+
+    private TemplateSummary[] FilteredTemplatesByName => string.IsNullOrWhiteSpace(searchTerm)
         ? TemplateSummaries
         : TemplateSummaries?.Where(r => r.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
         .ToArray();
 
+    private string[] DistinctOrganisations => TemplateSummaries
+        .Select(t => t.Organisation)
+        .Where(org => !string.IsNullOrWhiteSpace(org))
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .OrderBy(org => org)
+        .ToArray();
+
+    private TemplateSummary[] FilteredTemplates =>
+        FilteredTemplatesByName
+            .Where(t => t.Organisation != null && SelectedOrganisations.Contains(t.Organisation))
+        .ToArray();
+
+    private void ToggleOrganisation(string org)
+    {
+        if (SelectedOrganisations.Contains(org))
+        {
+            SelectedOrganisations.Remove(org);
+            SelectedOrganisations.Remove("All Communities");
+        }
+        else
+        {
+            SelectedOrganisations.Add(org);
+        }
+    }
+
+    private void ClearCommunities()
+    {
+        SelectedOrganisations.Clear();
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -92,7 +170,8 @@ else
                             Tags = (latestTemplate?.Tags ?? []).Select(t => t.Name).ToArray(),
                             ReleaseDate = latestTemplate.ReleaseDate,
                             LatestVersion = latestTemplate.GetSemanticVersionString(),
-                            TotalDownloads = downloads
+                            TotalDownloads = downloads,
+                            Organisation = latestTemplate.Organisation
                         };
                     }
                 )
