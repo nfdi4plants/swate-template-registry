@@ -4,6 +4,14 @@
 @inject IDbContextFactory<SwateTemplateDb> SwateTemplateDbContextFactory
 @rendermode InteractiveServer
 
+<style>
+    .dropdown-content {
+        max-height: 300px;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+</style>
+
 <h1>All available Swate templates</h1>
 
 @if (TemplateSummaries == null)
@@ -30,6 +38,24 @@ else
                         <input type="checkbox" id="@org" @onchange="() => ToggleOrganisation(org)"
                                checked="@SelectedOrganisations.Contains(org)"/>
                         @org
+                    </label>
+                </li>
+            }
+        </ul>
+    </details>
+    <details class="dropdown" style="cursor: pointer;" readonly value="@string.Join(" , ", SelectedTags)">
+        <summary>Tags</summary>
+        <ul class="dropdown-content">
+            <li>
+                <input type="text" @bind="searchTag" @bind:event="oninput" placeholder="Search by tag" />
+            </li>
+            @foreach (var tag in DistinctTags)
+            {
+                <li>
+                    <label>
+                        <input type="checkbox" id="@tag" @onchange="() => ToggleTag(tag)"
+                                checked="@SelectedTags.Contains(tag)" />
+                        @tag
                     </label>
                 </li>
             }
@@ -73,9 +99,11 @@ else
     /// search string in input field
     /// </summary>
     private string searchTerm = string.Empty;
+    private string searchTag = string.Empty;
     private string sortColumn = "Name";
 
     private HashSet<string> SelectedOrganisations = new() { "DataPLANT" };
+    private HashSet<string> SelectedTags = new();
 
     private bool sortAscending = true;
     private bool isDropdownOpen = false;
@@ -147,6 +175,13 @@ else
         .OrderBy(org => org)
         .ToArray();
 
+    private string[] DistinctTags => TemplateSummaries
+        .SelectMany(t => t.Tags)
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .Where(tag => !string.IsNullOrWhiteSpace(tag))
+        .OrderBy(tag => tag)
+        .ToArray();
+
     private TemplateSummary[] FilteredTemplates =>
         FilteredTemplatesByName
             .Where(t => t.Organisation != null && SelectedOrganisations.Contains(t.Organisation))
@@ -163,6 +198,18 @@ else
         else
         {
             SelectedOrganisations.Add(org);
+        }
+    }
+
+    private void ToggleTag(string tag)
+    {
+        if (SelectedTags.Contains(tag))
+        {
+            SelectedTags.Remove(tag);
+        }
+        else
+        {
+            SelectedTags.Add(tag);
         }
     }
 
