@@ -2,6 +2,7 @@
 
 @page "/templates"
 @inject IDbContextFactory<SwateTemplateDb> SwateTemplateDbContextFactory
+@inject IJSRuntime JS
 @rendermode InteractiveServer
 
 <style>
@@ -9,6 +10,58 @@
         max-height: 300px;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
+    }
+
+    .combobox-wrapper {
+        position: relative;
+        width: auto;
+        font-family: inherit;
+    }
+
+    .combobox-input {
+        width: 100%;
+        padding: 0.25rem 0.5rem;
+        box-sizing: border-box;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    .combobox-list {
+        position: absolute;
+        top: 100%;
+        left: 0%;
+        right: 0%;
+        max-height: 200px;
+        overflow-y: auto;
+        border: 1px solid #ccc;
+        background: white;
+        padding: 0.25rem 0;
+        margin: 0;
+        list-style: none;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+        z-index:1000;
+        border-radius: 4px;
+    }
+
+    .combobox-item {
+        display: flex;
+        align-items: center;
+        padding: 0.25rem 0.5rem;
+        cursor: pointer;
+    }
+
+    .combobox-item input {
+        margin-right: 0.5rem;
+    }
+
+    combobox-item:hover {
+        background-color: #f0f0f0
+    }
+
+    combobox-empty {
+        padding: 0.25rem 0.5rem;
+        color: #888;
+        font-style: italic;
     }
 </style>
 
@@ -43,24 +96,32 @@ else
             }
         </ul>
     </details>
-    <details class="dropdown" style="cursor: pointer;" readonly value="@string.Join(" , ", SelectedTags)">
-        <summary>Tags</summary>
-        <ul class="dropdown-content">
-            <li>
-                <input type="text" @bind="searchTag" @bind:event="oninput" placeholder="Search by tag" />
-            </li>
-            @foreach (var tag in DistinctTags)
-            {
-                <li>
-                    <label>
-                        <input type="checkbox" id="@tag" @onchange="() => ToggleTag(tag)"
-                                checked="@SelectedTags.Contains(tag)" />
-                        @tag
-                    </label>
-                </li>
-            }
-        </ul>
-    </details>
+    <div class="combobox-wrapper" @onclick:stopPropagation="true">
+        <input type="text" placeholder="Search tags..." @bind="searchTag" @oninput="FilterTags" @onclick:stopPropagation="true" @onclick="() => OpenDropdown()" class="combobox-input" />
+
+        @if (isOpen)
+        {
+            <ul class="combobox-list" @onclick:stopPropagation="true">
+                @foreach (var tag in FilteredTags)
+                {
+                    <li>
+                        <label class="combobox-item" @onclick:stopPropagation="true">
+                            <input type="checkbox"
+                                id="@tag"
+                                @onchange="() => ToggleTag(tag)"
+                                checked="@SelectedTags.Contains(tag)"/>
+                            @tag
+                        </label>
+                    </li>
+                }
+
+                @if (!FilteredTags.Any())
+                {
+                    <li class="combobox-empty">No tags found</li>
+                }
+            </ul>
+        }
+    </div>
 
     <div class="overflow-auto">
         <table class="table">
@@ -95,6 +156,7 @@ else
     /// This is the collection of all templates from the database.
     /// </summary>
     private TemplateSummary[]? TemplateSummaries;
+
     /// <summary>
     /// search string in input field
     /// </summary>
@@ -107,6 +169,7 @@ else
 
     private bool sortAscending = true;
     private bool isDropdownOpen = false;
+    private bool isOpen = false;
     private bool areAllCommunitiesSelected => SelectedOrganisations.Count == 0;
 
     private void SortByName()
@@ -144,6 +207,18 @@ else
         isDropdownOpen = !isDropdownOpen;
     }
 
+    private void OpenDropdown(ChangeEventArgs eventArgs = null)
+    {
+        isOpen = true;
+    }
+
+    [JSInvokable]
+    public void CloseDropdown()
+    {
+        isOpen = false;
+        StateHasChanged();
+    }
+
     private bool HasAllOrganisations()
     {
         return SelectedOrganisations.Contains("All Communities");
@@ -162,7 +237,7 @@ else
             SelectedOrganisations.Distinct();
         }
     }
-    
+
     private TemplateSummary[] FilteredTemplatesByName => string.IsNullOrWhiteSpace(searchTerm)
         ? TemplateSummaries
         : TemplateSummaries?.Where(r => r.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
@@ -185,8 +260,23 @@ else
     private TemplateSummary[] FilteredTemplates =>
         FilteredTemplatesByName
             .Where(t => t.Organisation != null && SelectedOrganisations.Contains(t.Organisation))
+            .Where(t =>
+                SelectedTags.Count == 0 ||
+                SelectedTags.All(tag => t.Tags.Contains(tag))
+            )
         .ToArray()
         .SortTemplatesBy(sortColumn, sortAscending);
+
+    private void FilterTags (ChangeEventArgs e)
+    {
+        searchTag = e.Value?.ToString() ?? string.Empty;
+        isOpen = true;
+    }
+
+    private IEnumerable<string> FilteredTags =>
+        string.IsNullOrWhiteSpace(searchTag)
+            ? DistinctTags
+            : DistinctTags.Where(tag => tag.Contains(searchTag, StringComparison.OrdinalIgnoreCase));
 
     private void ToggleOrganisation(string org)
     {
@@ -216,6 +306,14 @@ else
     private void ClearCommunities()
     {
         SelectedOrganisations.Clear();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JS.InvokeVoidAsync("combobox.registerOutsideClick", DotNetObjectReference.Create(this));
+        }
     }
 
     protected override async Task OnInitializedAsync()
