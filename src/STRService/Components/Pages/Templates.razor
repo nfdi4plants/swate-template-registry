@@ -31,7 +31,7 @@
         top: 100%;
         left: 0%;
         right: 0%;
-        max-height: 200px;
+        max-height: 400px;
         overflow-y: auto;
         border: 1px solid #ccc;
         background: white;
@@ -48,6 +48,7 @@
         align-items: center;
         padding: 0.25rem 0.5rem;
         cursor: pointer;
+        color: #222;
     }
 
     .combobox-item input {
@@ -143,7 +144,7 @@ else
             <tbody>
                 @foreach (var templateSummary in FilteredTemplates)
                 {
-                    <TemplateSummaryRow summary="@templateSummary"></TemplateSummaryRow>
+                    <TemplateSummaryRow summary="@templateSummary" OnTagClick="AddTag"></TemplateSummaryRow>
                 }
             </tbody>
         </table>
@@ -298,6 +299,14 @@ else
             SelectedTags.Remove(tag);
         }
         else
+        {
+            SelectedTags.Add(tag);
+        }
+    }
+
+    private void AddTag(string tag)
+    {
+        if (!SelectedTags.Contains(tag))
         {
             SelectedTags.Add(tag);
         }
