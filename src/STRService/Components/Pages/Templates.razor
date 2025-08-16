@@ -1,8 +1,72 @@
-﻿@page "/templates"
+@using STRService.Extensions;
+
+@page "/templates"
 @inject IDbContextFactory<SwateTemplateDb> SwateTemplateDbContextFactory
+@inject IJSRuntime JS
 @rendermode InteractiveServer
 
-<h1>All available Swate templates</h1
+<style>
+    .dropdown-content {
+        max-height: 300px;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .combobox-wrapper {
+        position: relative;
+        width: auto;
+        font-family: inherit;
+    }
+
+    .combobox-input {
+        width: 100%;
+        padding: 0.25rem 0.5rem;
+        box-sizing: border-box;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    .combobox-list {
+        position: absolute;
+        top: 100%;
+        left: 0%;
+        right: 0%;
+        max-height: 400px;
+        overflow-y: auto;
+        border: 1px solid #ccc;
+        background: white;
+        padding: 0.25rem 0;
+        margin: 0;
+        list-style: none;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+        z-index:1000;
+        border-radius: 4px;
+    }
+
+    .combobox-item {
+        display: flex;
+        align-items: center;
+        padding: 0.25rem 0.5rem;
+        cursor: pointer;
+        color: #222;
+    }
+
+    .combobox-item input {
+        margin-right: 0.5rem;
+    }
+
+    combobox-item:hover {
+        background-color: #f0f0f0
+    }
+
+    combobox-empty {
+        padding: 0.25rem 0.5rem;
+        color: #888;
+        font-style: italic;
+    }
+</style>
+
+<h1>All available Swate templates</h1>
 
 @if (TemplateSummaries == null)
 {
@@ -11,15 +75,67 @@
 else
 {
     <input @bind="searchTerm" @bind:event="oninput" placeholder="Search by name" />
+    <details class="dropdown" style="cursor: pointer;" readonly value="@string.Join(" , ", SelectedOrganisations)">
+        <summary>Communities</summary>
+        <ul>
+            <li>
+                <label>
+                    <input type="checkbox" id="All Communities" @onchange="() => ToggleAllOrganisations()"
+                           checked="@HasAllOrganisations()" />
+                    All Communities
+                </label>
+            </li>
+            @foreach (var org in DistinctOrganisations)
+            {
+                <li>
+                    <label>
+                        <input type="checkbox" id="@org" @onchange="() => ToggleOrganisation(org)"
+                               checked="@SelectedOrganisations.Contains(org)"/>
+                        @org
+                    </label>
+                </li>
+            }
+        </ul>
+    </details>
+    <div class="combobox-wrapper" @onclick:stopPropagation="true">
+        <input type="text" placeholder="Search tags..." @bind="searchTag" @oninput="FilterTags" @onclick:stopPropagation="true" @onclick="() => OpenDropdown()" class="combobox-input" />
+
+        @if (isOpen)
+        {
+            <ul class="combobox-list" @onclick:stopPropagation="true">
+                @foreach (var tag in FilteredTags)
+                {
+                    <li>
+                        <label class="combobox-item" @onclick:stopPropagation="true">
+                            <input type="checkbox"
+                                id="@tag"
+                                @onchange="() => ToggleTag(tag)"
+                                checked="@SelectedTags.Contains(tag)"/>
+                            @tag
+                        </label>
+                    </li>
+                }
+
+                @if (!FilteredTags.Any())
+                {
+                    <li class="combobox-empty">No tags found</li>
+                }
+            </ul>
+        }
+    </div>
 
     <div class="overflow-auto">
         <table class="table">
             <thead>
                 <tr>
-                    <th scope="col">Name</th>
+                    <th scope="col" @onclick="() => SortByName()" style="cursor: pointer;">
+                        Name @GetSortIcon("Name")
+                    </th>
                     <th scope="col">Description</th>
                     <th scope="col">Latest stable version</th>
-                    <th scope="col">Release date</th>
+                    <th scope="col" @onclick="() => SortByReleaseDate()" style="cursor: pointer;">
+                        Release date @GetSortIcon("ReleaseDate")
+                    </th>
                     <th scope="col">Tags</th>
                     <th scope="col">Total Downloads</th>
                     <th scope="col">Id</th>
@@ -28,29 +144,186 @@ else
             <tbody>
                 @foreach (var templateSummary in FilteredTemplates)
                 {
-                    <TemplateSummaryRow summary="@templateSummary"></TemplateSummaryRow>
+                    <TemplateSummaryRow summary="@templateSummary" OnTagClick="AddTag"></TemplateSummaryRow>
                 }
             </tbody>
         </table>
     </div>
 }
 
-@code 
+@code
 {
     ///  <summary>
     /// This is the collection of all templates from the database.
     /// </summary>
     private TemplateSummary[]? TemplateSummaries;
+
     /// <summary>
     /// search string in input field
     /// </summary>
     private string searchTerm = string.Empty;
+    private string searchTag = string.Empty;
+    private string sortColumn = "Name";
 
-    private TemplateSummary[] FilteredTemplates => string.IsNullOrWhiteSpace(searchTerm)
+    private HashSet<string> SelectedOrganisations = new() { "DataPLANT" };
+    private HashSet<string> SelectedTags = new();
+
+    private bool sortAscending = true;
+    private bool isDropdownOpen = false;
+    private bool isOpen = false;
+    private bool areAllCommunitiesSelected => SelectedOrganisations.Count == 0;
+
+    private void SortByName()
+    {
+        SortByColumn("Name");
+    }
+
+    private void SortByReleaseDate()
+    {
+        SortByColumn("ReleaseDate");
+    }
+
+    private void SortByColumn(string column)
+    {
+        if (sortColumn == column)
+        {
+            sortAscending = !sortAscending;
+        }
+        else
+        {
+            sortColumn = column;
+            sortAscending = true;
+        }
+    }
+
+    private string GetSortIcon(string column)
+    {
+        if (sortColumn != column) return "▲▼";
+        return sortAscending ? "▲" : "▼";
+    }
+    private bool IsDropdownOpen = false;
+
+    private void ToggleDropDown()
+    {
+        isDropdownOpen = !isDropdownOpen;
+    }
+
+    private void OpenDropdown(ChangeEventArgs eventArgs = null)
+    {
+        isOpen = true;
+    }
+
+    [JSInvokable]
+    public void CloseDropdown()
+    {
+        isOpen = false;
+        StateHasChanged();
+    }
+
+    private bool HasAllOrganisations()
+    {
+        return SelectedOrganisations.Contains("All Communities");
+    }
+
+    private void ToggleAllOrganisations()
+    {
+        if (HasAllOrganisations())
+        {
+            SelectedOrganisations.Clear();
+        }
+        else
+        {
+            SelectedOrganisations = DistinctOrganisations.ToHashSet();
+            SelectedOrganisations.Add("All Communities");
+            SelectedOrganisations.Distinct();
+        }
+    }
+
+    private TemplateSummary[] FilteredTemplatesByName => string.IsNullOrWhiteSpace(searchTerm)
         ? TemplateSummaries
         : TemplateSummaries?.Where(r => r.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))
         .ToArray();
 
+    private string[] DistinctOrganisations => TemplateSummaries
+        .Select(t => t.Organisation)
+        .Where(org => !string.IsNullOrWhiteSpace(org))
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .OrderBy(org => org)
+        .ToArray();
+
+    private string[] DistinctTags => TemplateSummaries
+        .SelectMany(t => t.Tags)
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .Where(tag => !string.IsNullOrWhiteSpace(tag))
+        .OrderBy(tag => tag)
+        .ToArray();
+
+    private TemplateSummary[] FilteredTemplates =>
+        FilteredTemplatesByName
+            .Where(t => t.Organisation != null && SelectedOrganisations.Contains(t.Organisation))
+            .Where(t =>
+                SelectedTags.Count == 0 ||
+                SelectedTags.All(tag => t.Tags.Contains(tag))
+            )
+        .ToArray()
+        .SortTemplatesBy(sortColumn, sortAscending);
+
+    private void FilterTags (ChangeEventArgs e)
+    {
+        searchTag = e.Value?.ToString() ?? string.Empty;
+        isOpen = true;
+    }
+
+    private IEnumerable<string> FilteredTags =>
+        string.IsNullOrWhiteSpace(searchTag)
+            ? DistinctTags
+            : DistinctTags.Where(tag => tag.Contains(searchTag, StringComparison.OrdinalIgnoreCase));
+
+    private void ToggleOrganisation(string org)
+    {
+        if (SelectedOrganisations.Contains(org))
+        {
+            SelectedOrganisations.Remove(org);
+            SelectedOrganisations.Remove("All Communities");
+        }
+        else
+        {
+            SelectedOrganisations.Add(org);
+        }
+    }
+
+    private void ToggleTag(string tag)
+    {
+        if (SelectedTags.Contains(tag))
+        {
+            SelectedTags.Remove(tag);
+        }
+        else
+        {
+            SelectedTags.Add(tag);
+        }
+    }
+
+    private void AddTag(string tag)
+    {
+        if (!SelectedTags.Contains(tag))
+        {
+            SelectedTags.Add(tag);
+        }
+    }
+
+    private void ClearCommunities()
+    {
+        SelectedOrganisations.Clear();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JS.InvokeVoidAsync("combobox.registerOutsideClick", DotNetObjectReference.Create(this));
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -92,7 +365,8 @@ else
                             Tags = (latestTemplate?.Tags ?? []).Select(t => t.Name).ToArray(),
                             ReleaseDate = latestTemplate.ReleaseDate,
                             LatestVersion = latestTemplate.GetSemanticVersionString(),
-                            TotalDownloads = downloads
+                            TotalDownloads = downloads,
+                            Organisation = latestTemplate.Organisation
                         };
                     }
                 )

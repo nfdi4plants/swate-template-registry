@@ -1,6 +1,6 @@
-﻿@foreach (var tag in tags)
+@foreach (var tag in tags)
 {
-    <TemplateTag tag="@tag"></TemplateTag>
+    <TemplateTag tag="@tag" OnTagClick="@OnTagClick"></TemplateTag>
     @if (tag != tags.Last())
     {
         @(", ")
@@ -10,4 +10,6 @@
 @code {
     [Parameter]
     public string[] tags { get; set; }
+    [Parameter]
+    public EventCallback<string> OnTagClick { get; set; }
 }

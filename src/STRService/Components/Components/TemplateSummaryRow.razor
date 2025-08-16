@@ -1,4 +1,4 @@
-﻿<tr>
+<tr>
     <th scope="row">
         <a href="/template/@summary.Id" 
             class="hover:underline transition-colors duration-200"
@@ -18,7 +18,7 @@
     <td><a href="/template/@summary.Id/@summary.LatestVersion">@summary.LatestVersion</a></td>
     <td>@summary.ReleaseDate</td>
     <td>
-        <TemplateTags tags="@summary.Tags"></TemplateTags>
+        <TemplateTags tags="@summary.Tags" OnTagClick="@OnTagClick"></TemplateTags>
     </td>
     <td>@summary.TotalDownloads</td>
     <td>@summary.Id</td>
@@ -29,5 +29,6 @@
 
     [Parameter]
     public TemplateSummary summary { get; set; }
-
+    [Parameter]
+    public EventCallback<string> OnTagClick { get; set; }
 }
