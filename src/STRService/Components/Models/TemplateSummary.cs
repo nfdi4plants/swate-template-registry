@@ -1,4 +1,4 @@
-﻿namespace STRService.Components.Models
+namespace STRService.Components.Models
 {
     public class TemplateSummary
     {
@@ -9,5 +9,6 @@
         public DateOnly ReleaseDate { get; set; }
         public string LatestVersion { get; set; }
         public int TotalDownloads { get; set; }
+        public string Organisation { get; set; }
     }
 }
