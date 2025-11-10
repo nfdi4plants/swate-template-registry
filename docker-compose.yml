@@ -10,8 +10,10 @@ services:
       dockerfile: src/STRService/Dockerfile
     networks:
       - aspnetcoreapp-network
-    depends_on: 
+    depends_on:
       - "package_db"
+    volumes:
+      - ./data-protection-keys:/root/.aspnet/DataProtection-Keys
 
   package_db: # name of the service matches "Server" in connection string
     container_name: 'swate_template_database'
@@ -33,7 +35,7 @@ services:
       - 8080:8080
     networks:
       - aspnetcoreapp-network
-    depends_on: 
+    depends_on:
       - "package_db"
 
 networks:
