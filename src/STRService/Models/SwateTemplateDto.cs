@@ -1,4 +1,4 @@
-﻿
+
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -17,7 +17,7 @@ namespace STRService.Models
                     Content = content,
                     Metadata = metadata
                 };
-
+        //Content of data transfer object
         public required SwateTemplate Content { get; set; }
         public required SwateTemplateMetadata Metadata { get; set; }
 
